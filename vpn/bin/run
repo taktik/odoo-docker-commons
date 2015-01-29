@@ -1,0 +1,37 @@
+#!/bin/sh
+set -e
+
+if [ -e /dev/ppp ]; then
+    rm /dev/ppp
+fi
+
+stop-redirects
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+IP_ADDR=$(ip addr show | grep inet | grep eth0 | cut -d/ -f1 | awk '{ print $2}' | head -n1)
+echo $IP_ADDR
+
+# Copy the templates from the /vpn/templates directory to /etc/
+# in order to be sure the IP will always be correct, even after a restart of the container
+cp /vpn/templates/ipsec.conf /etc/ipsec.conf
+cp /vpn/templates/ipsec.secrets /etc/ipsec.secrets
+
+perl -pi -e 's/YOUR.SERVER.IP.ADDRESS/'$IP_ADDR'/' /etc/ipsec.conf
+perl -pi -e 's/YOUR.SERVER.IP.ADDRESS/'$IP_ADDR'/' /etc/ipsec.secrets
+
+sysctl net.ipv4.ip_forward=1
+
+mknod /dev/ppp c 108 0
+chmod 600 /dev/ppp
+
+service ipsec restart
+service xl2tpd restart
+sleep 3
+ipsec verify
+
+while true
+do
+	date
+	echo "VPN Working"
+	sleep 60
+done
