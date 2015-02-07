@@ -3,8 +3,12 @@
 # This script gets the VHOST configuration from the environment variables
 # and register to etcd (if the container was linked to the etcd container).
 # It stores the configuration in /hosts/ip_of_the_container.
-# Then it starts ping_etcd.sh to update the TTL of the directory of the configuration.
-# Every environment variables starting by VHOST will treated by the script.
+# Then it loops indefinitely to update the TTL of the directory of the configuration (every 15 seconds).
+#
+# This script should be launched with supervisord or equivalent process control system in order
+# to be relaunched if an error occurred.
+#
+# Every environment variables starting by VHOST will be treated by the script.
 # The configuration can be defined with a compact (shortcut) form:
 # VHOST=external_port:internal_port:hostname1,hostname2
 # Or you can use full parameters (or a combination of the two, compact + some parameters):
@@ -23,11 +27,10 @@ if [ "$ETCD_PORT_4001_TCP_ADDR" != "false" ]; then
     echo "[etcd_host] `date +\%Y/\%m/\%d\ \%H:%M:%S` registering to etcd"
     VHOSTS=$(printenv | grep "VHOST");
     if [ -n "$VHOSTS" ]; then
-        pkill -9 "ping_etcd" # Kill ping_etcd.sh if already launched
-        etcdctl -C "$ETCD" mkdir "/hosts/$IP_clean" --ttl 30
-        etcdctl -C "$ETCD" set "/hosts/$IP_clean/ip" "$IP"
+        etcdctl -C "$ETCD" mkdir "/hosts/$IP_clean" --ttl 30 2>&1 1> /dev/null # Redirect stderr to stdout then stdout to null
+        etcdctl -C "$ETCD" set "/hosts/$IP_clean/ip" "$IP" 2>&1 1> /dev/null   # so only stderr will be printed in the log
         while read -r line; do
-            vhost_number=$(echo $line | sed -r 's!(VHOST)([0-9]*)(.*)=(.*)!\2!')
+            vhost_number=$(echo $line | sed -r 's!(VHOST)([0-9]*)(.*)=(.*)!\2!') # VHOST will be 0, VHOST1 1, VHOST2 2, etc.
             if [ -z "$vhost_number" ]; then
                 vhost_number=0;
             fi
@@ -41,9 +44,9 @@ if [ "$ETCD_PORT_4001_TCP_ADDR" != "false" ]; then
                     external_port=${vhost[0]};
                     internal_port=${vhost[1]};
                     hostnames=${vhost[2]};
-                    etcdctl -C "$ETCD" set "/hosts/$IP_clean/config/$vhost_number/external_port" "$external_port"
-                    etcdctl -C "$ETCD" set "/hosts/$IP_clean/config/$vhost_number/internal_port" "$internal_port"
-                    etcdctl -C "$ETCD" set "/hosts/$IP_clean/config/$vhost_number/hostnames" "$hostnames"
+                    etcdctl -C "$ETCD" set "/hosts/$IP_clean/config/$vhost_number/external_port" "$external_port" 2>&1 1> /dev/null
+                    etcdctl -C "$ETCD" set "/hosts/$IP_clean/config/$vhost_number/internal_port" "$internal_port" 2>&1 1> /dev/null
+                    etcdctl -C "$ETCD" set "/hosts/$IP_clean/config/$vhost_number/hostnames" "$hostnames" 2>&1 1> /dev/null
                     i=$((i+1))
                 fi
             else
@@ -52,10 +55,24 @@ if [ "$ETCD_PORT_4001_TCP_ADDR" != "false" ]; then
                 option=$(echo "${vhost[0]}" | sed -r 's/VHOST([0-9]*)_//' | tr '[:upper:]' '[:lower:]') # Remove VHOST_ and keep only the option name (VHOST_ENFORCE_SSL => ENFORCE_SSL)
                 value="${vhost[1]}"
 
-                etcdctl -C "$ETCD" set "/hosts/$IP_clean/config/$vhost_number/$option" "$value"
+                etcdctl -C "$ETCD" set "/hosts/$IP_clean/config/$vhost_number/$option" "$value" 2>&1 1> /dev/null
             fi
         done <<< "$VHOSTS"
-        /ping_etcd.sh & # Update TTL
+        echo "[etcd_host] `date +\%Y/\%m/\%d\ \%H:%M:%S` starting to ping etcd every 15 secs."
+        while true; do
+
+            IP=`ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+            IP_clean="${IP//\./_}"
+
+            # Update TTL on directory
+            if ! etcdctl -C "$ETCD" updatedir "/hosts/$IP_clean" --ttl 30; then
+                echo "[etcd_host] `date +\%Y/\%m/\%d\ \%H:%M:%S` etcdctl returned $?. The key $IP_clean was probably not found."
+                exit 1;
+            fi
+
+            sleep 15;
+
+        done
     else
         echo "[etcd_host] `date +\%Y/\%m/\%d\ \%H:%M:%S` no vhost environment variable defined."
     fi
