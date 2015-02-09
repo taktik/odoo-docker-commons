@@ -71,7 +71,8 @@ export LC_ALL=en_US.UTF-8
 apt-get install -qq apt-transport-https ca-certificates
 
 # Base dependencies and tools
-apt-get install -qq software-properties-common python-software-properties python2.7 python2.7-dev python-setuptools make vim curl psmisc
+apt-get install -qq software-properties-common python-software-properties python2.7 python2.7-dev make vim curl psmisc
+curl --silent --show-error --retry 5 https://bootstrap.pypa.io/get-pip.py | sudo python2.7
 
 # Config directory to store files that should be persisted with a shared volume.
 # In cleanup.sh files from this folder are copied in /config_tmp/.

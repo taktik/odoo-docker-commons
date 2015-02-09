@@ -2,15 +2,8 @@
 
 SCRIPT_PATH=`dirname "${BASH_SOURCE[0]}"`
 
-# Python Setuptools, pip
-easy_install pip
-
-# Supervisord to handle our processes
-easy_install supervisor
-easy_install supervisor-stdout
-
-# Upgrade setuptools
-pip install setuptools --no-use-wheel --upgrade
+pip install supervisor
+pip install supervisor-stdout
 
 # Copy default conf and start script
 cp $SCRIPT_PATH/templates/supervisord.conf /etc/supervisord.conf

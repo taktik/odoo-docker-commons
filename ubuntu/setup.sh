@@ -73,8 +73,9 @@ apt-get install -qq apt-transport-https ca-certificates
 # Base dependencies and tools
 apt-get install -qq aptitude software-properties-common python-software-properties
 apt-get install -qq sudo iputils-ping wget vim bzr bzip2 curl htop logrotate cron g++ rsync zip unzip nano vim curl less
-apt-get install -qq python2.7 python2.7-dev python-setuptools
+apt-get install -qq python2.7 python2.7-dev
 apt-get install -qq rsyslog make net-tools psmisc
+curl --silent --show-error --retry 5 https://bootstrap.pypa.io/get-pip.py | sudo python2.7
 
 # Git (needs software-properties-common python-software-properties)
 add-apt-repository ppa:git-core/ppa
