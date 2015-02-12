@@ -11,14 +11,4 @@ mkdir /var/run/sshd
 # Create needed directories / files if needed
 mkdir -p /root/.ssh
 touch /root/.ssh/authorized_keys
-
-mkdir -p /home/openerp/.ssh
-touch /home/openerp/.ssh/authorized_keys
-
-# Copy default key in authorized_keys to be able to login
-if [ -f $SCRIPT_PATH/templates/id_rsa_docker.pub ]; then
-    cat $SCRIPT_PATH/templates/id_rsa_docker.pub >> /root/.ssh/authorized_keys
-    cat $SCRIPT_PATH/templates/id_rsa_docker.pub >> /home/openerp/.ssh/authorized_keys
-fi
-
 chown -R root: /root/.ssh
