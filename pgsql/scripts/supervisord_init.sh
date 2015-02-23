@@ -14,7 +14,7 @@ redirect_stderr=true
 stdout_events_enabled=true
 stderr_events_enabled=true
 stdout_logfile=/var/log/postgresql.log
-stdout_logfile_maxbytes=20MB
-stdout_logfile_backups=5
+stdout_logfile_maxbytes=50MB
+stdout_logfile_backups=10
 
 EOF

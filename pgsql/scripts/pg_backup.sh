@@ -158,7 +158,7 @@ EXPIRED_DAYS=`expr $((($MONTHS_TO_KEEP * 30) + 1))`
 if [ "$DAY_OF_MONTH" -eq 1 ] && [ "$HOUR" -eq 23 ];
 then
 	# Delete all expired monthly directories
-	find $BACKUP_DIR -maxdepth 1 -mtime +$EXPIRED_DAYS -name "*-monthly.*" -exec rm -rf '{}' ';'
+	find $BACKUP_DIR -maxdepth 1 -type f -mtime +$EXPIRED_DAYS -name "*-monthly.*" -exec rm -rf '{}' ';'
 
 	perform_backups "-monthly"
 
@@ -175,7 +175,7 @@ EXPIRED_DAYS=`expr $((($WEEKS_TO_KEEP * 7) + 1))`
 if [ "$DAY_OF_WEEK" = $DAY_OF_WEEK_TO_KEEP ]  && [ "$HOUR" -eq 23 ];
 then
 	# Delete all expired weekly directories
-	find $BACKUP_DIR -maxdepth 1 -mtime +$EXPIRED_DAYS -name "*-weekly.*" -exec rm -rf '{}' ';'
+	find $BACKUP_DIR -maxdepth 1 -type f -mtime +$EXPIRED_DAYS -name "*-weekly.*" -exec rm -rf '{}' ';'
 
 	perform_backups "-weekly"
 
@@ -183,6 +183,6 @@ then
 fi
 
 # Delete daily backups 7 days old or more
-find $BACKUP_DIR -maxdepth 1 -mtime +$DAYS_TO_KEEP ! -name "*-monthly.*" ! -name "*-weekly.*" ! -name "pg_backup.config" -exec rm -rf '{}' ';'
+find $BACKUP_DIR -maxdepth 1 -type f -mtime +$DAYS_TO_KEEP ! -name "*-monthly.*" ! -name "*-weekly.*" ! -name "pg_backup.config" -exec rm -rf '{}' ';'
 
 perform_backups
