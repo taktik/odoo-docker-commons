@@ -28,7 +28,7 @@ if [ -z $CONFIG_FILE_PATH ] ; then
 fi
 
 if [ ! -r ${CONFIG_FILE_PATH} ] ; then
-        echo "Could not load config file from ${CONFIG_FILE_PATH}" 1>&2
+        echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][error] \"Could not load config file from ${CONFIG_FILE_PATH}\"" 1>&2
         exit 1
 fi
 
@@ -40,7 +40,7 @@ source "${CONFIG_FILE_PATH}"
 
 # Make sure we're running as the required backup user
 if [ "$BACKUP_USER" != "" -a "$(id -un)" != "$BACKUP_USER" ]; then
-	echo "This script must be run as $BACKUP_USER. Exiting." 1>&2
+	echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][error] This script must be run as $BACKUP_USER. Exiting." 1>&2
 	exit 1
 fi
 
@@ -68,10 +68,10 @@ function perform_backups()
 	FINAL_BACKUP_DIR=$BACKUP_DIR
 	SUFFIX="`date +\%Y\%m\%d_\%H%M`$SUFFIX"
 
-	echo "`date +\%Y\%m\%d_\%H%M` Making backup in directory $FINAL_BACKUP_DIR"
+	echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"Making backup in directory $FINAL_BACKUP_DIR\""
 
 	if ! mkdir -p $FINAL_BACKUP_DIR; then
-		echo "`date +\%Y\%m\%d_\%H%M` Cannot create backup directory in $FINAL_BACKUP_DIR. Go and fix it!" 1>&2
+		echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][error] \"Cannot create backup directory in $FINAL_BACKUP_DIR. Go and fix it!\"" 1>&2
 		exit 1;
 	fi;
 
@@ -87,20 +87,21 @@ function perform_backups()
 
 	SCHEMA_ONLY_QUERY="select datname from pg_database where false $SCHEMA_ONLY_CLAUSE order by datname;"
 
-	echo -e "`date +\%Y\%m\%d_\%H%M` >> Performing schema-only backups"
+	echo -e "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"Performing schema-only backups\""
 
 	SCHEMA_ONLY_DB_LIST=`psql -h "$HOSTNAME" -U "$USERNAME" -At -c "$SCHEMA_ONLY_QUERY" postgres`
 
-	echo -e "`date +\%Y\%m\%d_\%H%M` The following databases were matched for schema-only backup:\n${SCHEMA_ONLY_DB_LIST}"
+	echo -e "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"The following databases were matched for schema-only backup:\n${SCHEMA_ONLY_DB_LIST}\""
 
 	for DATABASE in $SCHEMA_ONLY_DB_LIST
 	do
-	        echo "`date +\%Y\%m\%d_\%H%M` Schema-only backup of $DATABASE"
+	        echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"Schema-only backup of $DATABASE\""
 
 	        if ! pg_dump -Fp -s -h "$HOSTNAME" -U "$USERNAME" "$DATABASE" | gzip > $FINAL_BACKUP_DIR"$DATABASE"_SCHEMA"_$SUFFIX".sql.gz.in_progress; then
-	                echo "`date +\%Y\%m\%d_\%H%M` [!!ERROR!!] Failed to backup database schema of $DATABASE" 1>&2
+	                echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][error] \"$DATABASE\" 0 \"Failed to backup database schema\"" 1>&2
 	        else
 	                mv $FINAL_BACKUP_DIR"$DATABASE"_SCHEMA"_$SUFFIX".sql.gz.in_progress $FINAL_BACKUP_DIR"$DATABASE"_SCHEMA"_$SUFFIX".sql.gz
+	                echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][info] \"$DATABASE\" `du $FINAL_BACKUP_DIR"$DATABASE"_SCHEMA"_$SUFFIX".sql.gz  | cut -f -1` \"$FINAL_BACKUP_DIR"$DATABASE"_SCHEMA"_$SUFFIX".sql.gz\"" # Use cut to only show bytes (no filename)
 	        fi
 	done
 
@@ -116,35 +117,37 @@ function perform_backups()
 
 	FULL_BACKUP_QUERY="select datname from pg_database where not datistemplate and datallowconn $EXCLUDE_SCHEMA_ONLY_CLAUSE order by datname;"
 
-	echo -e "`date +\%Y\%m\%d_\%H%M` >> Performing full backups"
+	echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"Performing full backups\""
 
 	for DATABASE in `psql -h "$HOSTNAME" -U "$USERNAME" -At -c "$FULL_BACKUP_QUERY" postgres`
 	do
 		if [ $ENABLE_PLAIN_BACKUPS = "yes" ]
 		then
-			echo "`date +\%Y\%m\%d_\%H%M` Plain backup of $DATABASE"
+			echo "`date -u +'%Y-%m-%dT%H:%M:%SZ'` \"Plain backup of $DATABASE\""
 
 			if ! pg_dump -Fp -h "$HOSTNAME" -U "$USERNAME" "$DATABASE" | gzip > $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".sql.gz.in_progress; then
-				echo "`date +\%Y\%m\%d_\%H%M` [!!ERROR!!] Failed to produce plain backup database $DATABASE" 1>&2
+				echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][error] \"$DATABASE\" 0 \"Failed to produce plain backup\"" 1>&2
 			else
 				mv $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".sql.gz.in_progress $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".sql.gz
+				echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][info] \"$DATABASE\" `du $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".sql.gz  | cut -f -1` \"$FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".sql.gz\"" # Use cut to only show bytes (no filename)
 			fi
 		fi
 
 		if [ $ENABLE_CUSTOM_BACKUPS = "yes" ]
 		then
-			echo "`date +\%Y\%m\%d_\%H%M` Custom backup of $DATABASE"
+			echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"Custom backup of $DATABASE\""
 
 			if ! pg_dump -Fc -h "$HOSTNAME" -U "$USERNAME" "$DATABASE" -f $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".dump.in_progress; then
-				echo "`date +\%Y\%m\%d_\%H%M` [!!ERROR!!] Failed to produce custom backup database $DATABASE"
+				echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][error] \"$DATABASE\" 0 \"Failed to produce custom backup\""
 			else
 				mv $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".dump.in_progress $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".dump
+				echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][info] \"$DATABASE\" `du $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".dump  | cut -f -1` \"$FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".dump\"" # Use cut to only show bytes (no filename)
 			fi
 		fi
 
 	done
 
-	echo -e "`date +\%Y\%m\%d_\%H%M` All database backups complete!"
+	echo -e "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"All database backups complete!\""
 }
 
 # MONTHLY BACKUPS

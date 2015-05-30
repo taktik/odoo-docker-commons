@@ -4,7 +4,7 @@ echo "Adding logstash-forwarder to supervisord"
 cat >> /etc/supervisord.conf <<EOF
 
 [program:logstash]
-command=/opt/logstash-forwarder/bin/logstash-forwarder -config /etc/logstash-forwarder.conf
+command=/opt/logstash-forwarder/bin/logstash-forwarder -config /etc/logstash_conf/logstash-forwarder.conf
 process_name=%(program_name)s
 directory=/var/run
 autostart = true
