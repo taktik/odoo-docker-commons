@@ -82,13 +82,6 @@ add-apt-repository ppa:git-core/ppa
 apt-get -qq update
 apt-get install -qq git
 
-# Config directory to store files that should be persisted with a shared volume.
-# In cleanup.sh files from this folder are copied in /config_tmp/.
-# So in the startup script, if you have defined a shared volume on /config, you can
-# always copy the files from /config_tmp/ to /config/ so they are not erased.
-# See odoo/scripts/start.sh
-mkdir -p /config
-
 # Scripts
 cp $SCRIPT_PATH/regenerate_ssh_host_keys.sh /regenerate_ssh_host_keys.sh
 chmod +x /regenerate_ssh_host_keys.sh

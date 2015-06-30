@@ -74,13 +74,6 @@ apt-get install -qq apt-transport-https ca-certificates
 apt-get install -qq sudo software-properties-common python-software-properties python2.7 python2.7-dev make vim curl psmisc
 curl --silent --show-error --retry 5 https://bootstrap.pypa.io/get-pip.py | sudo python2.7
 
-# Config directory to store files that should be persisted with a shared volume.
-# In cleanup.sh files from this folder are copied in /config_tmp/.
-# So in the startup script, if you have defined a shared volume on /config, you can
-# always copy the files from /config_tmp/ to /config/ so they are not erased.
-# See odoo/scripts/start.sh
-mkdir -p /config
-
 # Scripts
 cp $SCRIPT_PATH/regenerate_ssh_host_keys.sh /regenerate_ssh_host_keys.sh
 chmod +x /regenerate_ssh_host_keys.sh

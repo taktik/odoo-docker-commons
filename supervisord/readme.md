@@ -1,7 +1,7 @@
 # Supervisord
 
 * Installs supervisord
-* Copies default supervisord.conf to /etc/supervisord.conf
+* Copies default supervisord.conf to /etc/supervisord.conf (default configuration file includes /etc/supervisor/conf.d/*.conf)
 * Copies default start.sh script to /start.sh
 
 The start script start supervisord in foreground.
