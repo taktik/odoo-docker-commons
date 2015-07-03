@@ -9,5 +9,5 @@ then
 fi
 date=`/bin/date +%Y%m%d-%Hh%M`
 
-sudo -u postgres /usr/bin/pg_dump -F c -U postgres -f "$outputdir/$1_${date}.dump" $1
+/usr/bin/pg_dump -F c -f "$outputdir/$1_${date}.dump" $1
 echo "$outputdir/$1_${date}.dump"

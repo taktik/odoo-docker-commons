@@ -20,5 +20,5 @@ cp $SCRIPT_PATH/scripts/backupDatabase.sh /usr/local/bin/
 cp $SCRIPT_PATH/scripts/dropAndImportDB.sh /usr/local/bin/
 cp $SCRIPT_PATH/scripts/pg_backup.sh /usr/local/bin/
 cp $SCRIPT_PATH/scripts/pgKillSessions.sh /
-mkdir -p /config
-cp $SCRIPT_PATH/templates/pg_backup.config /config/
+mkdir -p /config/pg_backup/
+cp $SCRIPT_PATH/templates/pg_backup.config /config/pg_backup/

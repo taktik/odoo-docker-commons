@@ -33,6 +33,7 @@ if [ ! -r ${CONFIG_FILE_PATH} ] ; then
 fi
 
 source "${CONFIG_FILE_PATH}"
+source /root/.profile
 
 ###########################
 #### PRE-BACKUP CHECKS ####
@@ -43,19 +44,6 @@ if [ "$BACKUP_USER" != "" -a "$(id -un)" != "$BACKUP_USER" ]; then
 	echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][error] This script must be run as $BACKUP_USER. Exiting." 1>&2
 	exit 1
 fi
-
-
-###########################
-### INITIALISE DEFAULTS ###
-###########################
-
-if [ ! $HOSTNAME ]; then
-	HOSTNAME="localhost"
-fi;
-
-if [ ! $USERNAME ]; then
-	USERNAME="postgres"
-fi;
 
 
 ###########################
@@ -77,55 +65,25 @@ function perform_backups()
 
 
 	###########################
-	### SCHEMA-ONLY BACKUPS ###
-	###########################
-
-	for SCHEMA_ONLY_DB in ${SCHEMA_ONLY_LIST//,/ }
-	do
-	        SCHEMA_ONLY_CLAUSE="$SCHEMA_ONLY_CLAUSE or datname ~ '$SCHEMA_ONLY_DB'"
-	done
-
-	SCHEMA_ONLY_QUERY="select datname from pg_database where false $SCHEMA_ONLY_CLAUSE order by datname;"
-
-	echo -e "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"Performing schema-only backups\""
-
-	SCHEMA_ONLY_DB_LIST=`psql -h "$HOSTNAME" -U "$USERNAME" -At -c "$SCHEMA_ONLY_QUERY" postgres`
-
-	echo -e "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"The following databases were matched for schema-only backup:\n${SCHEMA_ONLY_DB_LIST}\""
-
-	for DATABASE in $SCHEMA_ONLY_DB_LIST
-	do
-	        echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"Schema-only backup of $DATABASE\""
-
-	        if ! pg_dump -Fp -s -h "$HOSTNAME" -U "$USERNAME" "$DATABASE" | gzip > $FINAL_BACKUP_DIR"$DATABASE"_SCHEMA"_$SUFFIX".sql.gz.in_progress; then
-	                echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][error] \"$DATABASE\" 0 \"Failed to backup database schema\"" 1>&2
-	        else
-	                mv $FINAL_BACKUP_DIR"$DATABASE"_SCHEMA"_$SUFFIX".sql.gz.in_progress $FINAL_BACKUP_DIR"$DATABASE"_SCHEMA"_$SUFFIX".sql.gz
-	                echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][info] \"$DATABASE\" `du $FINAL_BACKUP_DIR"$DATABASE"_SCHEMA"_$SUFFIX".sql.gz  | cut -f -1` \"$FINAL_BACKUP_DIR"$DATABASE"_SCHEMA"_$SUFFIX".sql.gz\"" # Use cut to only show bytes (no filename)
-	        fi
-	done
-
-
-	###########################
 	###### FULL BACKUPS #######
 	###########################
 
-	for SCHEMA_ONLY_DB in ${SCHEMA_ONLY_LIST//,/ }
-	do
-		EXCLUDE_SCHEMA_ONLY_CLAUSE="$EXCLUDE_SCHEMA_ONLY_CLAUSE and datname !~ '$SCHEMA_ONLY_DB'"
-	done
+    BACKUP_FILTER_CLAUSE=""
+    if [ -n "$BACKUP_ONLY_FILTER" ] && [ "$BACKUP_ONLY_FILTER" != "false" ]; then
+        BACKUP_FILTER_CLAUSE=" and datname ~ '$BACKUP_ONLY_FILTER'"
+    fi
 
-	FULL_BACKUP_QUERY="select datname from pg_database where not datistemplate and datallowconn $EXCLUDE_SCHEMA_ONLY_CLAUSE order by datname;"
+	FULL_BACKUP_QUERY="select datname from pg_database where not datistemplate and datallowconn $BACKUP_FILTER_CLAUSE order by datname;"
 
 	echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"Performing full backups\""
 
-	for DATABASE in `psql -h "$HOSTNAME" -U "$USERNAME" -At -c "$FULL_BACKUP_QUERY" postgres`
+	for DATABASE in `psql -At -c "$FULL_BACKUP_QUERY" postgres`
 	do
 		if [ $ENABLE_PLAIN_BACKUPS = "yes" ]
 		then
 			echo "`date -u +'%Y-%m-%dT%H:%M:%SZ'` \"Plain backup of $DATABASE\""
 
-			if ! pg_dump -Fp -h "$HOSTNAME" -U "$USERNAME" "$DATABASE" | gzip > $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".sql.gz.in_progress; then
+			if ! pg_dump -Fp -h "$DATABASE" | gzip > $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".sql.gz.in_progress; then
 				echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][error] \"$DATABASE\" 0 \"Failed to produce plain backup\"" 1>&2
 			else
 				mv $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".sql.gz.in_progress $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".sql.gz
@@ -137,7 +95,7 @@ function perform_backups()
 		then
 			echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][debug] \"Custom backup of $DATABASE\""
 
-			if ! pg_dump -Fc -h "$HOSTNAME" -U "$USERNAME" "$DATABASE" -f $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".dump.in_progress; then
+			if ! pg_dump -Fc "$DATABASE" -f $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".dump.in_progress; then
 				echo "[`date -u +'%Y-%m-%dT%H:%M:%SZ'`][error] \"$DATABASE\" 0 \"Failed to produce custom backup\""
 			else
 				mv $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".dump.in_progress $FINAL_BACKUP_DIR"$DATABASE"_"$SUFFIX".dump
