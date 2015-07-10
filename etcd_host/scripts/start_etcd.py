@@ -79,7 +79,7 @@ def init():
             # i.e. VHOST_SOMETHING
             config = re.search(r'VHOST(\d+)*(?:_)*(.*)', vhost)
             if config:
-                vhost_number = config.group(1)
+                vhost_number = config.group(1) or 0
                 vhost_parameter = config.group(2) or False
 
         if not vhost_parameter:
@@ -97,7 +97,7 @@ def init():
                 vhosts.setdefault(vhost_number, {}).update({"prefix": short_parameters[3].lower()})
 
         else:
-            vhosts.setdefault(vhost_number, {}).update({vhost_parameter.lower(): value.lower()})
+            vhosts.setdefault(vhost_number, {}).update({vhost_parameter.lower(): value})
 
     for vhost_number, values in vhosts.iteritems():
         prefix = values.get('prefix', 'hosts')
