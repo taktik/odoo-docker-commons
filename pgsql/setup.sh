@@ -12,9 +12,6 @@ LC_ALL=en_US.UTF-8 apt-get -qq install postgresql-9.3 postgresql-contrib-9.3 pos
 # database are possible.
 echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
 
-# Copy our pg_hba.conf file and override the default one.
-cp $SCRIPT_PATH/templates/pg_hba.conf /etc/postgresql/9.3/main/pg_hba.conf
-
 # Scripts
 cp $SCRIPT_PATH/scripts/backupDatabase.sh /usr/local/bin/
 cp $SCRIPT_PATH/scripts/dropAndImportDB.sh /usr/local/bin/

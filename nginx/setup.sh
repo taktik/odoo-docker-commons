@@ -34,3 +34,5 @@ cd "$CURRENT_DIR"
 cp $NGINX_SCRIPT_PATH/templates/nginx.conf /etc/nginx/nginx.conf
 cp $NGINX_SCRIPT_PATH/templates/nginx /etc/init.d/nginx
 chmod +x /etc/init.d/nginx
+
+cp $NGINX_SCRIPT_PATH/templates/supervisor_nginx.conf /etc/supervisor/conf.d/
