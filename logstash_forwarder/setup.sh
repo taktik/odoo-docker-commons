@@ -8,11 +8,10 @@ apt-get -qq update
 apt-get -qq install logstash-forwarder
 mkdir -p /etc/pki/tls/certs
 
-# Remove default logstash-forwarder.conf
-rm /etc/logstash-forwarder.conf > /dev/null 2>&1 || true
+# By default disable logstash-forwarder
+mv /etc/logstash-forwarder.conf /etc/logstash-forwarder.conf.example > /dev/null 2>&1 || true
 
-# Copy supervisor conf file but disable it by default
+# Scripts and templates
 cp $LOGSTASH_SCRIPT_PATH/scripts/start_logstash_forwarder.sh /
-cp $LOGSTASH_SCRIPT_PATH/templates/supervisor_logstash_forwarder.conf /etc/supervisor/conf.d/supervisor_logstash_forwarder.conf.disabled
-
+cp $LOGSTASH_SCRIPT_PATH/templates/supervisor_logstash_forwarder.conf /etc/supervisor/conf.d/
 chmod +x /*.sh

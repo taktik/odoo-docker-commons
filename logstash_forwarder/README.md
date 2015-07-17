@@ -1,13 +1,14 @@
 # Logstash forwarder
 
-## Instructions
-To be able to use logstash forwarder, a configuration file must be present in the container:
+Installs [logstash-forwarder](https://github.com/elastic/logstash-forwarder).
 
-- /etc/logstash-forwarder.conf
+## Usage
 
-Without this file, logstash-forwarder will be disabled.
+Logstash-forwarder will start only if the configuration file /etc/logstash-forwarder.conf is present.  
+An exemple is available [here](examples/logstash-forwarder.conf) or in the container at /etc/logstash-forwarder.conf.example.
 
-You can use the example file in the examples directory.  
-This file can be shared directly from the host, for instance by adding the following volume when running the container:
+## Dependencies
 
-- /media/DATA/odoo/containers/name/logstash-forwarder.conf/:/etc/logstash-forwarder.conf
+Depends on [supervisor](../supervisord/readme.md).  
+If the /etc/collectd/collectd.conf file is not present, the program will exit immediately with a status code 3, allowed in the
+supervisord configuration and thus not automatically restarted.
