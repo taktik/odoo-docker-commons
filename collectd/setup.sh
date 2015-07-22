@@ -1,5 +1,6 @@
 #!/bin/bash
 SCRIPT_PATH=`dirname "${BASH_SOURCE[0]}"`
+CURRENT_DIR=`pwd`
 
 apt-get update
 apt-get install -qq build-essential
@@ -14,6 +15,7 @@ make all install
 mv /etc/collectd/collectd.conf /etc/collectd/collectd.conf.example 2>&1 || true
 
 # Scripts and templates
+cd "$CURRENT_DIR"
 cp $SCRIPT_PATH/scripts/start_collectd.sh /
 cp $SCRIPT_PATH/templates/supervisor_collectd.conf /etc/supervisor/conf.d/
 chmod +x /*.sh
