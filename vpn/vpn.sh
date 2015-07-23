@@ -18,18 +18,4 @@ cp $SCRIPT_PATH/options.xl2tpd /etc/ppp/options.xl2tpd
 cp $SCRIPT_PATH/chap-secrets /etc/ppp/chap-secrets
 
 cp $SCRIPT_PATH/bin/* /usr/local/sbin/
-
-cat >> /etc/supervisord.conf <<EOF
-
-[program:vpn]
-command=/usr/local/sbin/run
-process_name=%(program_name)s
-stopsignal=INT
-autostart=true
-autorestart=true
-redirect_stderr=true
-stdout_events_enabled=true
-stderr_events_enabled=true
-stdout_logfile=/var/log/vpn.log
-
-EOF
+cp $SCRIPT_PATH/templates/supervisor_vpn.conf /etc/supervisor/conf.d/
