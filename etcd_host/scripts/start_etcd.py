@@ -102,7 +102,7 @@ def init():
     for vhost_number, values in vhosts.iteritems():
         prefix = values.get('prefix', 'hosts')
         try:
-            sh.etcdctl("-C", etcd_ip, "mkdir", "%s/%s" % (prefix, sanitized_ip), "--ttl", "30", _err=process_output)
+            sh.etcdctl("-C", etcd_ip, "mkdir", "%s/%s" % (prefix, sanitized_ip), _err=process_output)
         except Exception, e:
             pass  # Probably key already exists
 
