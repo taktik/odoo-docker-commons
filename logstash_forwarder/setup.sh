@@ -11,6 +11,9 @@ mkdir -p /etc/pki/tls/certs
 # By default disable logstash-forwarder
 mv /etc/logstash-forwarder.conf /etc/logstash-forwarder.conf.example > /dev/null 2>&1 || true
 
+# Create logstash-forwarder working directory
+mkdir -p /home/logstash
+
 # Scripts and templates
 cp $LOGSTASH_SCRIPT_PATH/scripts/start_logstash_forwarder.sh /
 cp $LOGSTASH_SCRIPT_PATH/templates/supervisor_logstash_forwarder.conf /etc/supervisor/conf.d/
