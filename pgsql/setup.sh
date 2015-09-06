@@ -4,7 +4,8 @@ SCRIPT_PATH=`dirname "${BASH_SOURCE[0]}"`
 
 # PostgreSQL
 echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+# --no-check-certificate to avoid errors if using a cache (squid).
+wget --no-check-certificate --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 apt-get update
 LC_ALL=en_US.UTF-8 apt-get -qq install postgresql-9.3 postgresql-contrib-9.3 postgresql-server-dev-9.3
 
