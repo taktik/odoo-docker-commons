@@ -12,3 +12,5 @@ mkdir /var/run/sshd
 mkdir -p /root/.ssh
 touch /root/.ssh/authorized_keys
 chown -R root: /root/.ssh
+
+cp $SCRIPT_PATH/templates/supervisor_sshd.conf /etc/supervisor/conf.d/
