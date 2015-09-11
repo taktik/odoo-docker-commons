@@ -8,7 +8,7 @@ apt-get -qq install libpcre3 libpcre3-dev zlib1g-dev # Useful for rewrite module
 
 mkdir -p /var/log/nginx
 
-mkdir /nginx
+mkdir -p /nginx
 cd /nginx
 wget http://nginx.org/download/nginx-1.6.0.tar.gz
 tar xzvf nginx-1.6.0.tar.gz
