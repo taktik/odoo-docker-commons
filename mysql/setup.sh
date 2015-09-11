@@ -11,4 +11,5 @@ mkdir -p /var/log/mysql
 
 cp $MYSQL_SCRIPT_PATH/scripts/mysql_backup.sh /usr/local/bin/
 cp $MYSQL_SCRIPT_PATH/scripts/mysql_restore.sh /usr/local/bin/
+cp $MYSQL_SCRIPT_PATH/templates/supervisor_mysql.conf /etc/supervisor/conf.d/
 chmod +x /usr/local/bin/mysql_*.sh
